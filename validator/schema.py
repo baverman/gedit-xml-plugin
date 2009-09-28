@@ -2,23 +2,21 @@
 
 from lxml import etree
 
-
 class SchemaNotFoundException(Exception): pass
 
-
 class SchemaValidator(object):
+    error_log = property(lambda self:self.schema.error_log)
+    
     def __init__(self, root, catalog):
         self.catalog = catalog
         self.root = root
         self.schema = self.get_schema(root)
-
 
     def get_xsd_filename_for_ns(self, ns):
         try:
             return self.catalog[ns]
         except KeyError:
             raise SchemaNotFoundException("Can't find xsd for [%s] namespace" % ns)
-        
     
     def get_schema(self, root):
         merged_schema = \
@@ -38,8 +36,3 @@ class SchemaValidator(object):
         
     def validate(self):
         return self.schema.validate(self.root)
-        
-    def get_error_log(self):
-        return self.schema.error_log
-        
-    error_log = property(get_error_log)
