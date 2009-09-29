@@ -8,6 +8,16 @@ class Node(object):
         self.start = start
         self.name = name
         self.end = end
+        self.open_node = None
+
+class TagCloseContext(object):
+    def __init__(self, open_tag_name):
+        self.open_tag_name = open_tag_name
+
+class TagOpenContext(object):
+    def __init__(self, partial_name, context):
+        self.partial_name = partial_name
+        self.context = context
 
 def get_position(line, column, xml):
     pos = 0
@@ -60,12 +70,16 @@ def get_tags(xml, end_position):
                 is_open = True                
                 tag_end_pos = semi_close_pos + 1
 
-
+        print tag_pos, tag_name, tag_end_pos
         if is_open:
+            if tag_pos + len(tag_name) >= end_position:
+                tag_name = tag_name[:end_position - tag_pos - 1]
             current = parent = Node(parent, tag_pos, tag_name, tag_end_pos)
         elif is_open == False:
-            current = Node(parent, tag_pos, tag_name, tag_end_pos)
+            old_parent = parent
             parent = parent.parent
+            current = Node(parent, tag_pos, tag_name, tag_end_pos)
+            current.open_node = old_parent 
         elif is_open is None and tag_end_pos > end_position:
             current = Node(parent, tag_pos, tag_name, tag_end_pos)
         
@@ -76,9 +90,18 @@ def guess_context(line, column, xml):
         raise Exception('I can handle only unicode data')
 
     end_position = get_position(line, column, xml)
-
-    node = get_tags(xml, end_position)    
-    while(node):
-        print node.name
-        node = node.parent
     
+    node = get_tags(xml, end_position)
+    
+    if node.open_node:
+        return TagCloseContext(node.open_node.name)
+    
+    context = []
+    current = node
+    
+    node = node.parent
+    while(node):
+        context.insert(0, node.name)
+        node = node.parent
+        
+    return TagOpenContext(current.name, context)  
