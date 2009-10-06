@@ -29,7 +29,7 @@ def get_position(line, column, xml):
             
     return pos
 
-def get_tags(xml, end_position):
+def get_context(xml, end_position):
     comments = []
     
     def is_in_comment(tag_pos):
@@ -70,7 +70,6 @@ def get_tags(xml, end_position):
                 is_open = True                
                 tag_end_pos = semi_close_pos + 1
 
-        print tag_pos, tag_name, tag_end_pos
         if is_open:
             if tag_pos + len(tag_name) >= end_position:
                 tag_name = tag_name[:end_position - tag_pos - 1]
@@ -91,7 +90,7 @@ def guess_context(line, column, xml):
 
     end_position = get_position(line, column, xml)
     
-    node = get_tags(xml, end_position)
+    node = get_context(xml, end_position)
     
     if node.open_node:
         return TagCloseContext(node.open_node.name)

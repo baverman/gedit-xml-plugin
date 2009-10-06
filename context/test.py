@@ -2,7 +2,7 @@
 
 import unittest
 
-from context import get_position
+from context import get_position, guess_context, TagOpenContext, TagCloseContext
 
 test_xml = u'''<?xml version="1.0"?>
 
@@ -42,6 +42,18 @@ class TestPositionGetter(unittest.TestCase):
        pos = get_position(12, 8, test_xml)
        self.assertEquals('a>', test_xml[pos:pos+2])
 
+
+class TestContextGuesser(unittest.TestCase):
+    def assertObjEquals(self, first, second):
+        self.assertEquals(first.__class__, second.__class__)
+        self.assertEquals(vars(first), vars(second))
+
+    def testGuessContext(self):
+        self.assertObjEquals(TagOpenContext('be', []), guess_context(3, 3, test_xml))
+        self.assertObjEquals(TagOpenContext('beans', []), guess_context(3, 6, test_xml))
+        self.assertObjEquals(TagOpenContext('beans', []), guess_context(3, 9, test_xml))
+        
+        self.assertObjEquals(TagOpenContext(None, ['beans']), guess_context(9, 5, test_xml))
 
 if __name__ == '__main__':
     unittest.main()
